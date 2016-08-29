@@ -1,10 +1,10 @@
 // this function takes the question object returned by the StackOverflow request
 // and returns new result to be appended to DOM
 var showQuestion = function(question) {
-	
+
 	// clone our result template code
 	var result = $('.templates .question').clone();
-	
+
 	// Set the question properties in result
 	var questionElem = result.find('.question-text a');
 	questionElem.attr('href', question.link);
@@ -28,15 +28,26 @@ var showQuestion = function(question) {
 		'<p>Reputation: ' + question.owner.reputation + '</p>'
 	);
 
+
 	return result;
 };
 
+var showAnswerers = function (answerer) {
+	var result = $('.templates .question').clone();
+
+	var questionElem = result.find('.question-text a');
+	questionElem.attr('href',answerer.link);
+	questionElem.text(answerer.display_name);
+
+
+}
 
 // this function takes the results object from StackOverflow
 // and returns the number of results and tags to be appended to DOM
 var showSearchResults = function(query, resultNum) {
 	var results = resultNum + ' results for <strong>' + query + '</strong>';
 	return results;
+	console.log(results);
 };
 
 // takes error string and turns it into displayable DOM element
@@ -49,15 +60,14 @@ var showError = function(error){
 // takes a string of semi-colon separated tags to be searched
 // for on StackOverflow
 var getUnanswered = function(tags) {
-	
+
 	// the parameters we need to pass in our request to StackOverflow's API
-	var request = { 
+	var request = {
 		tagged: tags,
 		site: 'stackoverflow',
 		order: 'desc',
 		sort: 'creation'
 	};
-	
 	$.ajax({
 		url: "http://api.stackexchange.com/2.2/questions/unanswered",
 		data: request,
@@ -83,30 +93,30 @@ var getUnanswered = function(tags) {
 
 //you are working here
 
-var topAnswered = function(tags) {
+var topAnswerers = function(tag) {
 	// the parameters we need to pass in our request to StackOverflow's API
-	var request = { 
-		tagged: tags,
+	var request = {
+		tagged: tag,
 		site: 'stackoverflow',
 		order: 'desc',
 		sort: 'creation'
 	};
-	
+
 	$.ajax({
-		url: "http://api.stackexchange.com/2.2/tags/{tag}/top-answerers/all_time?site=stackoverflow",
+		url: "http://api.stackexchange.com/2.2/tags/"+tag+"/top-answerers/all_time",
 		data: request,
 		dataType: "jsonp",//use jsonp to avoid cross origin issues
 		type: "GET",
 	})
 	.done(function(result){ //this waits for the ajax to return with a succesful promise object
-		var searchResults = showSearchResults(request.tagged, result.items.length);
+		var searchResults = showAnswerers(request.tagged, result.items.length);
 
 		$('.search-results').html(searchResults);
 		//$.each is a higher order function. It takes an array and a function as an argument.
 		//The function is executed once for each item in the array.
 		$.each(result.items, function(i, item) {
-			var question = showQuestion(item);
-			$('.results').append(question);
+			var answerer = showAnswerers(item);
+			$('.results').append(answerer);
 		});
 	})
 	.fail(function(jqXHR, error){ //this waits for the ajax to return with an error promise object
@@ -117,7 +127,7 @@ var topAnswered = function(tags) {
 
 
 $(document).ready( function() {
-	
+
 	$('.unanswered-getter').submit( function(e){
 		e.preventDefault();
 		// zero out results if previous search has run
@@ -130,8 +140,8 @@ $(document).ready( function() {
 	$('.inspiration-getter').submit( function(e){
 	e.preventDefault();
 	$('.results').html('');
-	var tags = $(this).find("input[name='answerers']").val();
-	topAnswered(tags)
+	var tag = $(this).find("input[name='answerers']").val();
+	topAnswerers(tag)
 	});
-	
+
 });
