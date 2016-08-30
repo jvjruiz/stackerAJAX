@@ -1,7 +1,6 @@
 // this function takes the question object returned by the StackOverflow request
 // and returns new result to be appended to DOM
 var showQuestion = function(question) {
-
 	// clone our result template code
 	var result = $('.templates .question').clone();
 
@@ -33,13 +32,20 @@ var showQuestion = function(question) {
 };
 
 var showAnswerers = function (answerer) {
-	var result = $('.templates .question').clone();
+	var result = $('.templates .answerer').clone();
+	console.log(answerer)
+	//seat the answerer identification information
+	var answererElem = result.find('.answerer-id a');
+	answererElem.attr('href',answerer.link);
+	answererElem.text(answerer.display_name);
 
-	var questionElem = result.find('.question-text a');
-	questionElem.attr('href',answerer.link);
-	questionElem.text(answerer.display_name);
+	//set the post count of the user
+	var postCount = result.find('.reputation');
+	postCount.text(answerer.reputation);
 
-
+	var answererPortrait = result.find(".answerer-portrait")
+	answererPortrait.attr('src', answerer.profile_image)
+	return result;
 }
 
 // this function takes the results object from StackOverflow
@@ -47,7 +53,6 @@ var showAnswerers = function (answerer) {
 var showSearchResults = function(query, resultNum) {
 	var results = resultNum + ' results for <strong>' + query + '</strong>';
 	return results;
-	console.log(results);
 };
 
 // takes error string and turns it into displayable DOM element
@@ -109,14 +114,13 @@ var topAnswerers = function(tag) {
 		type: "GET",
 	})
 	.done(function(result){ //this waits for the ajax to return with a succesful promise object
-		var searchResults = showAnswerers(request.tagged, result.items.length);
-
+		var searchResults = showSearchResults(request.tagged, result.items.length);
 		$('.search-results').html(searchResults);
 		//$.each is a higher order function. It takes an array and a function as an argument.
 		//The function is executed once for each item in the array.
 		$.each(result.items, function(i, item) {
-			var answerer = showAnswerers(item);
-			$('.results').append(answerer);
+			var answerers = showAnswerers(item.user);
+			$('.results').append(answerers);
 		});
 	})
 	.fail(function(jqXHR, error){ //this waits for the ajax to return with an error promise object
